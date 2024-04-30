@@ -1,4 +1,7 @@
 const express = require('express');
+require('dotenv').config();
+const pgp = require('pg-promise')();
+const db = pgp(process.env.DATABASE_URL);
 const app = express();
 const port = 3000;
 
