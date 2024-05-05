@@ -11,11 +11,10 @@ app.use(cookieParser());
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).send('Something broke!');
+    res.status(500).send('Server error');
 });
 
-app.get('/', getCompletion);
-
+app.get('/api/generate-plan', getCompletion);
 
 // Start the server
 const port = 3000;
