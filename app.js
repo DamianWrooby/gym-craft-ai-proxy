@@ -1,12 +1,14 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
 const cors = require('cors');
 const app = express();
 const { getCompletion } = require('./app/controllers/completion.controller');
 
-// Middleware
+// Middlewares
 app.use(cors());
 app.use(cookieParser());
+app.use(bodyParser.json());
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -14,7 +16,7 @@ app.use((err, req, res, next) => {
     res.status(500).send('Server error');
 });
 
-app.get('/api/generate-plan', getCompletion);
+app.post('/api/generate-plan', getCompletion);
 
 // Start the server
 const port = 3000;
