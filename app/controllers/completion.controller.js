@@ -2,23 +2,25 @@ const db = require('../config/db.connection');
 const openAIconfig = require('../config/openAI.config');
 
 async function getCompletion(req, res) {
-    // console.log(req.body);
     const session = req.cookies?.session;
     const body = req.body;
 
+    // Check if the user is logged in
     try {
-		// Check if the user is logged in
         const user = await db.one('SELECT * FROM "User" WHERE "userAuthToken" = $1', [session]);
 		if (!user) {
 			res.status(401).send('Unauthorized');
 			return;
 		}
-        console.log(user);
-
-		res.send(user.username);
     } catch (e) {
         console.log(e);
         res.status(500).send('Server error');
+    }
+
+    // Check if the request body is valid
+    if (!body || typeof body !== 'object') {
+        res.status(400).send('Invalid request body');
+        return;
     }
 
     try {
@@ -32,25 +34,21 @@ async function getCompletion(req, res) {
             body,
         });
 
+        console.log({response});
         // Check if the response is ok
         if (!response.ok) {
-            throw new Error(`Could not connect to OpenAI API`);
-        }
-        if (!isChatCompletion(json)) {
-            throw new Error(`Unexpected response from OpenAI`);
+            res.status(500).send('Server error');
+            return;
         }
 
+
         const responseJson = await response.json();
-        console.log(responseJson);
-        res.send(responseJson.choices[0].message.content);
+        res.send(responseJson);
     } catch (e) {
         console.log(e);
         res.status(500).send(e.message);
     }
 }
-
-const isChatCompletion = (data) =>
-    typeof data === 'object' && !!(data).choices?.[0].message?.content;
 
 module.exports = {
     getCompletion,
