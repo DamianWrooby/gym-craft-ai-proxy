@@ -2,25 +2,29 @@ const db = require('../config/db.connection');
 const openAIconfig = require('../config/openAI.config');
 
 async function getCompletion(req, res) {
-    const session = req.cookies?.session;
     const body = req.body;
+    const session = body?.user?.session;
+    const openAIrequestBody = body?.openAIrequestBody;
+
+    // Check if the session is valid
+    if (!session) {
+        return res.status(401).send('Unauthorized');
+    }
+
+    // Check if the request body is valid
+    if (!body?.openAIrequestBody || typeof body !== 'object') {
+        return res.status(400).send('Invalid request body');
+    }
 
     // Check if the user is logged in
     try {
         const user = await db.one('SELECT * FROM "User" WHERE "userAuthToken" = $1', [session]);
 		if (!user) {
-			res.status(401).send('Unauthorized');
-			return;
+			return res.status(401).send('Unauthorized');
 		}
     } catch (e) {
         console.log(e);
-        res.status(500).send('Server error');
-    }
-
-    // Check if the request body is valid
-    if (!body || typeof body !== 'object') {
-        res.status(400).send('Invalid request body');
-        return;
+        return res.status(500).send('Server error');
     }
 
     try {
@@ -31,19 +35,17 @@ async function getCompletion(req, res) {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${process.env.SECRET_OPENAI_KEY}`,
             }),
-            body,
+            body: openAIrequestBody,
         });
 
         console.log({response});
         // Check if the response is ok
-        if (!response.ok) {
-            res.status(500).send('Server error');
-            return;
+        if (response.status !== 200) {
+            return res.status(500).send('External API error');
         }
 
-
         const responseJson = await response.json();
-        res.send(responseJson);
+        return res.send(responseJson);
     } catch (e) {
         console.log(e);
         res.status(500).send(e.message);
