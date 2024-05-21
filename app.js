@@ -20,6 +20,6 @@ app.post('/api/generate-plan', getCompletion);
 
 // Start the server
 const port = 3000;
-app.listen(port, () => {
+app.listen(process.env.PORT || port, () => {
     console.log(`App listening on port ${port}`);
 });
