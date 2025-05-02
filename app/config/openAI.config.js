@@ -1,9 +1,8 @@
 const openAIconfig = {
-    openAIapiUrl: 'https://api.openai.com/v1/chat/completions',
-    model: 'gpt-4o',
-    // model: 'gpt-3.5-turbo',
-    openAIcompletionSeed: 1,
-    openAIcompletionTemperature: 0.2,
+    apiUrl: 'https://api.openai.com/v1/chat/completions',
+    model: 'gpt-4o-mini',
+    completionSeed: 1,
+    completionTemperature: 0.2,
 };
 
 module.exports = openAIconfig;

@@ -1,0 +1,66 @@
+{
+    "sportType": { "sportTypeId": 7, "sportTypeKey": "yoga", "displayOrder": 7 },
+    "subSportType": null,
+    "workoutName": "Morning Energizer",
+    "estimatedDistanceUnit": { "unitKey": null },
+    "workoutSegments": [
+        {
+            "segmentOrder": 1,
+            "sportType": { "sportTypeId": 7, "sportTypeKey": "yoga", "displayOrder": 7 },
+            "workoutSteps": [
+                {
+                    "stepId": 1,
+                    "stepOrder": 1,
+                    "stepType": { "stepTypeId": 1, "stepTypeKey": "warmup", "displayOrder": 1 },
+                    "type": "ExecutableStepDTO",
+                    "endCondition": {
+                        "conditionTypeId": 2,
+                        "conditionTypeKey": "time",
+                        "displayOrder": 2,
+                        "displayable": true
+                    },
+                    "endConditionValue": 300,
+                    "description": "A series of poses to warm up the body.",
+                    "stepAudioNote": null,
+                    "targetType": { "workoutTargetTypeId": 1, "workoutTargetTypeKey": "no.target", "displayOrder": 1 }
+                },
+                {
+                    "stepId": 2,
+                    "stepOrder": 2,
+                    "stepType": { "stepTypeId": 3, "stepTypeKey": "interval", "displayOrder": 3 },
+                    "type": "ExecutableStepDTO",
+                    "endCondition": {
+                        "conditionTypeId": 2,
+                        "conditionTypeKey": "time",
+                        "displayOrder": 2,
+                        "displayable": true
+                    },
+                    "endConditionValue": 120,
+                    "description": "Stretch the hamstrings and lower back.",
+                    "stepAudioNote": null,
+                    "targetType": { "workoutTargetTypeId": 1, "workoutTargetTypeKey": "no.target", "displayOrder": 1 }
+                },
+                {
+                    "stepId": 3,
+                    "stepOrder": 3,
+                    "stepType": { "stepTypeId": 2, "stepTypeKey": "cooldown", "displayOrder": 2 },
+                    "type": "ExecutableStepDTO",
+                    "endCondition": {
+                        "conditionTypeId": 2,
+                        "conditionTypeKey": "time",
+                        "displayOrder": 2,
+                        "displayable": true
+                    },
+                    "endConditionValue": 180,
+                    "description": "A resting pose to relax the body.",
+                    "stepAudioNote": null,
+                    "targetType": { "workoutTargetTypeId": 1, "workoutTargetTypeKey": "no.target", "displayOrder": 1 }
+                }
+            ]
+        }
+    ],
+    "avgTrainingSpeed": null,
+    "estimatedDurationInSecs": 600,
+    "estimatedDistanceInMeters": 0,
+    "estimateType": null
+}
