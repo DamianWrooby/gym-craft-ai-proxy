@@ -10,7 +10,6 @@ async function fetchAIChatCompletion(messages) {
 
     // Check if the request body is valid
     if (!body || typeof body !== 'string') {
-        console.error('1');
         throw new Error('Invalid request body');
     }
 
@@ -24,7 +23,6 @@ async function fetchAIChatCompletion(messages) {
     });
 
     if (!response.ok) {
-        console.error('2');
         throw new Error(`OpenAI API returned status ${response.status}`);
     }
 

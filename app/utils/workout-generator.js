@@ -325,10 +325,6 @@ function processTarget(workoutStep, step) {
         workoutStep.targetValueOne = targetValueOne;
         workoutStep.targetValueTwo = targetValueTwo;
     }
-
-    if (step.target.unit) {
-        workoutStep.targetValueUnit = step.target.unit;
-    }
 }
 
 /**
@@ -342,8 +338,10 @@ function convertTargetValues(step, targetTypeKey) {
         ? step.target.value
         : calculateValueRange(step.target.value, targetTypeKey);
 
-    const targetValueOne = convertValueToUnit(minValue, step.target.unit);
-    const targetValueTwo = convertValueToUnit(maxValue, step.target.unit);
+    const lowerValue = minValue <= maxValue ? minValue : maxValue;
+    const higherValue = minValue < maxValue ? maxValue : minValue;
+    const targetValueOne = convertValueToUnit(lowerValue, step.target.unit);
+    const targetValueTwo = convertValueToUnit(higherValue, step.target.unit);
 
     return { targetValueOne, targetValueTwo };
 }

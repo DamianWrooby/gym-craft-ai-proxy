@@ -25,7 +25,6 @@ async function getCompletion(req, res) {
 
         // Get the completion from OpenAI
         const prompt = createPrompt(formData);
-        console.log('Prompt:', prompt);
 
         const chatCompletion = await fetchAIChatCompletion(prompt);
 
