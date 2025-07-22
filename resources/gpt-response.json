@@ -1,0 +1,313 @@
+{
+    "workouts": [
+        {
+            "name": "Morning Energizer",
+            "dayOfWeek": "Monday",
+            "justification": "A light workout to start the week and energize the body.",
+            "type": "walking",
+            "steps": [
+                {
+                    "stepName": "Warm-up Walk",
+                    "stepDescription": "Gentle walk to warm up the muscles.",
+                    "stepDuration": 600,
+                    "stepType": "warmup",
+                    "target": {
+                        "type": "no target",
+                        "value": [],
+                        "unit": ""
+                    }
+                },
+                {
+                    "stepName": "Brisk Walk",
+                    "stepDescription": "Increase the pace for a brisk walk.",
+                    "stepDuration": 1200,
+                    "stepType": "interval",
+                    "target": {
+                        "type": "pace",
+                        "value": 6.0,
+                        "unit": "min_per_km"
+                    }
+                },
+                {
+                    "stepName": "Cool Down Walk",
+                    "stepDescription": "Slow down to cool off.",
+                    "stepDuration": 600,
+                    "stepType": "cooldown",
+                    "target": {
+                        "type": "no target",
+                        "value": [],
+                        "unit": ""
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Strength Builder",
+            "dayOfWeek": "Tuesday",
+            "justification": "Focus on building strength with bodyweight exercises.",
+            "type": "strength",
+            "steps": [
+                {
+                    "stepName": "Bodyweight Squats",
+                    "stepDescription": "Perform squats to strengthen legs.",
+                    "stepDuration": 300,
+                    "stepType": "repeat",
+                    "target": {
+                        "type": "no target",
+                        "value": [],
+                        "unit": ""
+                    },
+                    "numberOfIterations": 3,
+                    "steps": [
+                        {
+                            "stepName": "Squats",
+                            "stepDescription": "Perform 15 squats.",
+                            "stepDuration": 60,
+                            "stepType": "interval",
+                            "target": {
+                                "type": "no target",
+                                "value": [],
+                                "unit": ""
+                            }
+                        },
+                        {
+                            "stepName": "Rest",
+                            "stepDescription": "Rest between sets.",
+                            "stepDuration": 30,
+                            "stepType": "rest",
+                            "target": {
+                                "type": "no target",
+                                "value": [],
+                                "unit": ""
+                            }
+                        }
+                    ]
+                },
+                {
+                    "stepName": "Push-ups",
+                    "stepDescription": "Perform push-ups to strengthen upper body.",
+                    "stepDuration": 300,
+                    "stepType": "repeat",
+                    "target": {
+                        "type": "no target",
+                        "value": [],
+                        "unit": ""
+                    },
+                    "numberOfIterations": 3,
+                    "steps": [
+                        {
+                            "stepName": "Push-ups",
+                            "stepDescription": "Perform 10 push-ups.",
+                            "stepDuration": 60,
+                            "stepType": "interval",
+                            "target": {
+                                "type": "no target",
+                                "value": [],
+                                "unit": ""
+                            }
+                        },
+                        {
+                            "stepName": "Rest",
+                            "stepDescription": "Rest between sets.",
+                            "stepDuration": 30,
+                            "stepType": "rest",
+                            "target": {
+                                "type": "no target",
+                                "value": [],
+                                "unit": ""
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Midweek Cardio Blast",
+            "dayOfWeek": "Wednesday",
+            "justification": "A high-intensity cardio session to boost endurance.",
+            "type": "running",
+            "steps": [
+                {
+                    "stepName": "Warm-up Jog",
+                    "stepDescription": "Light jog to warm up.",
+                    "stepDuration": 600,
+                    "stepType": "warmup",
+                    "target": {
+                        "type": "no target",
+                        "value": [],
+                        "unit": ""
+                    }
+                },
+                {
+                    "stepName": "Interval Sprints",
+                    "stepDescription": "Sprint for short bursts to increase heart rate.",
+                    "stepDuration": 1800,
+                    "stepType": "repeat",
+                    "target": {
+                        "type": "no target",
+                        "value": [],
+                        "unit": ""
+                    },
+                    "numberOfIterations": 5,
+                    "steps": [
+                        {
+                            "stepName": "Sprint",
+                            "stepDescription": "Sprint for 30 seconds.",
+                            "stepDuration": 30,
+                            "stepType": "interval",
+                            "target": {
+                                "type": "no target",
+                                "value": [],
+                                "unit": ""
+                            }
+                        },
+                        {
+                            "stepName": "Recovery Walk",
+                            "stepDescription": "Walk to recover.",
+                            "stepDuration": 90,
+                            "stepType": "recovery",
+                            "target": {
+                                "type": "no target",
+                                "value": [],
+                                "unit": ""
+                            }
+                        }
+                    ]
+                },
+                {
+                    "stepName": "Cool Down Walk",
+                    "stepDescription": "Slow down to cool off.",
+                    "stepDuration": 600,
+                    "stepType": "cooldown",
+                    "target": {
+                        "type": "no target",
+                        "value": [],
+                        "unit": ""
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Flexibility and Core",
+            "dayOfWeek": "Thursday",
+            "justification": "Focus on flexibility and core strength.",
+            "type": "strength",
+            "steps": [
+                {
+                    "stepName": "Plank Hold",
+                    "stepDescription": "Hold a plank position to strengthen core.",
+                    "stepDuration": 300,
+                    "stepType": "repeat",
+                    "target": {
+                        "type": "no target",
+                        "value": [],
+                        "unit": ""
+                    },
+                    "numberOfIterations": 3,
+                    "steps": [
+                        {
+                            "stepName": "Plank",
+                            "stepDescription": "Hold for 30 seconds.",
+                            "stepDuration": 30,
+                            "stepType": "interval",
+                            "target": {
+                                "type": "no target",
+                                "value": [],
+                                "unit": ""
+                            }
+                        },
+                        {
+                            "stepName": "Rest",
+                            "stepDescription": "Rest between sets.",
+                            "stepDuration": 30,
+                            "stepType": "rest",
+                            "target": {
+                                "type": "no target",
+                                "value": [],
+                                "unit": ""
+                            }
+                        }
+                    ]
+                },
+                {
+                    "stepName": "Stretching Routine",
+                    "stepDescription": "Perform a series of stretches for flexibility.",
+                    "stepDuration": 600,
+                    "stepType": "cooldown",
+                    "target": {
+                        "type": "no target",
+                        "value": [],
+                        "unit": ""
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Endurance Challenge",
+            "dayOfWeek": "Friday",
+            "justification": "Longer cardio session to build endurance.",
+            "type": "cycling",
+            "steps": [
+                {
+                    "stepName": "Warm-up Cycle",
+                    "stepDescription": "Gentle cycling to warm up.",
+                    "stepDuration": 600,
+                    "stepType": "warmup",
+                    "target": {
+                        "type": "no target",
+                        "value": [],
+                        "unit": ""
+                    }
+                },
+                {
+                    "stepName": "Steady State Cycling",
+                    "stepDescription": "Maintain a steady pace for endurance.",
+                    "stepDuration": 3600,
+                    "stepType": "interval",
+                    "target": {
+                        "type": "pace",
+                        "value": 20,
+                        "unit": "watts"
+                    }
+                },
+                {
+                    "stepName": "Cool Down Cycle",
+                    "stepDescription": "Slow down to cool off.",
+                    "stepDuration": 600,
+                    "stepType": "cooldown",
+                    "target": {
+                        "type": "no target",
+                        "value": [],
+                        "unit": ""
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Weekend Recovery Walk",
+            "dayOfWeek": "Saturday",
+            "justification": "A light recovery walk to promote active recovery.",
+            "type": "walking",
+            "steps": [
+                {
+                    "stepName": "Gentle Walk",
+                    "stepDescription": "A relaxed walk to recover from the week.",
+                    "stepDuration": 1800,
+                    "stepType": "interval",
+                    "target": {
+                        "type": "no target",
+                        "value": [],
+                        "unit": ""
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Rest and Reflect",
+            "dayOfWeek": "Sunday",
+            "justification": "A day for rest and reflection on the week's progress.",
+            "type": "no activity",
+            "steps": []
+        }
+    ]
+}
