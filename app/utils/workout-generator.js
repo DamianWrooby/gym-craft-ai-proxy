@@ -277,7 +277,7 @@ function processRegularStep(step, stepOrder) {
  */
 function processRepeatStep(step, stepOrder) {
     if (typeof step.numberOfIterations !== 'number' || step.numberOfIterations <= 0) {
-        throw new Error(`Invalid or missing numberOfIterations for repeat step.`);
+        console.log(`Invalid or missing numberOfIterations for repeat step.`);
     }
 
     const repeatStep = {
