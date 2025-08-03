@@ -5,38 +5,41 @@ const getUser = require('../db/user');
 const SurveyFormSchema = require('../schema/form-data');
 
 async function getCompletion(req, res) {
+    const start = Date.now();
+    console.log(`[${new Date().toISOString()}] Start getCompletion`);
+
     try {
         const { session, formData } = req.body || {};
 
-        // Validate the form data
-        if (!formData || typeof formData !== 'object') {
-            return res.status(400).send('Invalid request body');
-        }
+        console.log('Validating form data...');
         const formValidation = SurveyFormSchema.safeParse(formData);
         if (!formValidation.success) {
+            console.log('Invalid form data');
             return res.status(400).send('Invalid form data');
         }
 
-        try {
-            await getUser(session);
-        } catch (error) {
-            return res.status(401).send('Unauthorized');
-        }
+        console.log('Checking user session...');
+        await getUser(session);
 
-        // Get the completion from OpenAI
+        console.log('Creating prompt...');
         const prompt = createPrompt(formData);
 
+        console.log('Calling OpenAI API...');
+        const openAIStart = Date.now();
         const chatCompletion = await fetchAIChatCompletion(prompt);
+        console.log(`OpenAI API response took ${Date.now() - openAIStart}ms`);
 
         const generatedPlan = chatCompletion?.choices[0]?.message?.content;
-        if (!generatedPlan || typeof generatedPlan !== 'string' || generatedPlan.length === 0) {
-            return res.status(500).send('External API error - no response text');
+        if (!generatedPlan || typeof generatedPlan !== 'string') {
+            return res.status(500).send('Invalid response from OpenAI');
         }
 
+        console.log('Parsing and converting plan...');
         const cleanJson = generatedPlan.trim().replace(/^```json\s*|\s*```$/g, '');
         const convertedPlan = JSON.parse(cleanJson);
         convertedPlan.workouts = convertedPlan.workouts.map(convertWorkoutToGarmin);
 
+        console.log(`[${new Date().toISOString()}] Finished in ${Date.now() - start}ms`);
         return res.json(convertedPlan);
     } catch (error) {
         console.error('Error in getCompletion:', error.message);
