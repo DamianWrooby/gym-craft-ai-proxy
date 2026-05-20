@@ -3,6 +3,7 @@ const fetchAIChatCompletion = require('../ai/fetch');
 const convertWorkoutToGarmin = require('../utils/workout-generator');
 const getUser = require('../db/user');
 const SurveyFormSchema = require('../schema/form-data');
+const openAIconfig = require('../config/openAI.config');
 
 async function getCompletion(req, res) {
     const start = Date.now();
@@ -26,7 +27,7 @@ async function getCompletion(req, res) {
 
         console.log('Calling OpenAI API...');
         const openAIStart = Date.now();
-        const chatCompletion = await fetchAIChatCompletion(prompt);
+        const chatCompletion = await fetchAIChatCompletion(prompt, { seed: openAIconfig.completionSeed });
         console.log(`OpenAI API response took ${Date.now() - openAIStart}ms`);
 
         const generatedPlan = chatCompletion?.choices[0]?.message?.content;
