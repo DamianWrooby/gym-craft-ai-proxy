@@ -9,7 +9,7 @@ const createTextCompletionHandler = require('./app/controllers/text-completion.c
 // Middlewares
 app.use(cors());
 app.use(cookieParser());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '2mb' }));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
