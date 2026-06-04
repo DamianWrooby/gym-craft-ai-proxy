@@ -5,9 +5,13 @@ const cors = require('cors');
 const app = express();
 const { getCompletion } = require('./app/controllers/completion.controller');
 const createTextCompletionHandler = require('./app/controllers/text-completion.controller');
+const { getGarminActivities } = require('./app/controllers/garmin-activities.controller');
 
 // Middlewares
-app.use(cors());
+// Allowlist the app origins. The Garmin relay forwards live Garmin credentials on the
+// re-auth path, so an open relay is a meaningfully bigger abuse surface than the AI endpoints.
+const allowedOrigins = ['http://localhost:5173', 'https://gymcraft.damianwroblewski.com'];
+app.use(cors({ origin: allowedOrigins }));
 app.use(cookieParser());
 app.use(bodyParser.json({ limit: '2mb' }));
 
@@ -26,6 +30,7 @@ app.post(
     '/api/explain-run',
     createTextCompletionHandler({ tag: 'explain-run', maxTokens: 700, responseKey: 'analysis' }),
 );
+app.post('/api/garmin-activities', getGarminActivities);
 
 // Start the server
 const port = 3000;
