@@ -44,6 +44,7 @@ async function getGarminActivities(req, res) {
             body: JSON.stringify(requestBody),
             signal: controller.signal,
         });
+        console.log('Calling:', `${baseUrl}/activities`);
 
         // Read the raw text first so we can log it when the body is not JSON. An empty or
         // HTML body on a 429 points at an intermediary (Render router / Cloudflare)
