@@ -45,12 +45,29 @@ async function getGarminActivities(req, res) {
             signal: controller.signal,
         });
 
-        const data = await upstream.json().catch(() => ({}));
+        // Read the raw text first so we can log it when the body is not JSON. An empty or
+        // HTML body on a 429 points at an intermediary (Render router / Cloudflare)
+        // throttling the datacenter IP rather than the Flask app, which always returns JSON.
+        const rawBody = await upstream.text();
+        let data = {};
+        try {
+            data = rawBody ? JSON.parse(rawBody) : {};
+        } catch {
+            data = {};
+        }
 
         if (!upstream.ok) {
             const message = data?.message || 'Garmin service error';
             const code = String(message).includes('No valid token found') ? 'INVALID_TOKEN' : 'GARMIN_SERVICE_ERROR';
-            console.error(`[garmin-activities] upstream ${upstream.status}: ${message}`);
+            const diag = {
+                status: upstream.status,
+                retryAfter: upstream.headers.get('retry-after'),
+                contentType: upstream.headers.get('content-type'),
+                server: upstream.headers.get('server'),
+                cfRay: upstream.headers.get('cf-ray'),
+                bodySnippet: rawBody.slice(0, 300),
+            };
+            console.error(`[garmin-activities] upstream ${upstream.status}: ${message}`, JSON.stringify(diag));
             return res.status(upstream.status).json({ code, message });
         }
 
