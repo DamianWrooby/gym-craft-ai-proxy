@@ -68,7 +68,7 @@ async function getGarminActivities(req, res) {
                 cfRay: upstream.headers.get('cf-ray'),
                 bodySnippet: rawBody.slice(0, 300),
             };
-            console.error(`[garmin-activities] upstream ${upstream.status}: ${message}`, JSON.stringify(diag));
+            console.error(`[garmin-activities] upstream ${upstream.status}: ${message}`, JSON.stringify(upstream));
             return res.status(upstream.status).json({ code, message });
         }
 
