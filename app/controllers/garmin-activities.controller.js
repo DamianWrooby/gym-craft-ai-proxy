@@ -10,15 +10,18 @@ const TIMEOUT_MS = 120_000;
 // until the instance boots — so simply retrying /activities does not work. Instead we first poll
 // a cheap unauthenticated /health endpoint: each probe triggers the wake AND tests readiness.
 // Once it returns 200 the instance is up and the real request will reach Flask.
-const WAKE_TOTAL_BUDGET_MS = 60_000; // give Render up to ~60s to cold-start (boot is ~20-40s)
-const WAKE_PROBE_TIMEOUT_MS = 25_000; // per-probe cap (Render may hold a cold-start probe open)
-const WAKE_POLL_INTERVAL_MS = 4_000; // gap between probes; spaced out so we don't trip the edge
+const WAKE_TOTAL_BUDGET_MS = 120_000; // cold starts observed ~80s+; allow margin
+const WAKE_PROBE_TIMEOUT_MS = 45_000; // long enough for Render to HOLD a probe open through boot
+const WAKE_POLL_INTERVAL_MS = 2_000; // gap between probes
 
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Returns true once /health responds 200, false if the budget is exhausted first.
+// A 429 from Render's Cloudflare edge means the free instance is still spun down. ANY other
+// outcome — a 2xx, or even a 401 if /health isn't exempted from the API-key gate — came from
+// gunicorn, which proves the instance is up; so we stop waiting and send the real request (which
+// carries the API key and will succeed). Returns false only if the budget is exhausted on 429s.
 async function ensureServiceAwake(baseUrl, reqId) {
     const deadline = Date.now() + WAKE_TOTAL_BUDGET_MS;
     let attempt = 0;
@@ -28,16 +31,20 @@ async function ensureServiceAwake(baseUrl, reqId) {
         const probeTimeout = setTimeout(() => probe.abort(), WAKE_PROBE_TIMEOUT_MS);
         try {
             const res = await fetch(`${baseUrl}/health`, { method: 'GET', signal: probe.signal });
-            if (res.ok) {
-                if (attempt > 1) console.log(`[garmin-activities][#${reqId}] wake: ready after ${attempt} probe(s)`);
+            // Edge-429 (asleep) has no origin header; an origin response (even 401) proves Flask is up.
+            const reachedOrigin = res.status !== 429 || !!res.headers.get('x-render-origin-server');
+            if (reachedOrigin) {
+                console.log(
+                    `[garmin-activities][#${reqId}] wake: reached origin (status ${res.status}) after ${attempt} probe(s)`,
+                );
                 return true;
             }
-            console.log(
-                `[garmin-activities][#${reqId}] wake: probe ${attempt} -> ${res.status} ` +
-                    `(server=${res.headers.get('server') || '-'}), waiting…`,
-            );
+            console.log(`[garmin-activities][#${reqId}] wake: probe ${attempt} -> 429 (edge, still asleep), waiting…`);
         } catch (err) {
-            console.log(`[garmin-activities][#${reqId}] wake: probe ${attempt} failed (${err?.name || 'error'}), waiting…`);
+            // An aborted/hung probe usually means Render is HOLDING the request open while it boots
+            // — i.e. it's waking. Keep going; a later probe typically lands once boot completes.
+            const reason = err?.name === 'AbortError' ? 'held past timeout (booting)' : err?.name || 'failed';
+            console.log(`[garmin-activities][#${reqId}] wake: probe ${attempt} ${reason}, waiting…`);
         } finally {
             clearTimeout(probeTimeout);
         }
