@@ -115,7 +115,7 @@ async function getGarminActivities(req, res) {
                 `[garmin-activities][#${reqId}] upstream ${upstream.status}: ${message} ` +
                     `bodySnippet=${JSON.stringify(rawBody.slice(0, 300))}`,
             );
-            return res.status(upstream.status).json({ code, message });
+            return res.status(status).json({ code, message });
         }
 
         const count = Array.isArray(data?.data) ? data.data.length : 0;
