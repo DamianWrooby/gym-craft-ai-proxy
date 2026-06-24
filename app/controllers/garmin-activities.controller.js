@@ -96,13 +96,18 @@ async function getGarminActivities(req, res) {
 
         if (!upstream.ok) {
             const message = data?.message || 'Garmin service error';
-            const code = String(message).includes('No valid token found') ? 'INVALID_TOKEN' : 'GARMIN_SERVICE_ERROR';
-            // bodySnippet localizes the failure: a non-JSON body means an intermediary, not Flask.
+            const isTokenInvalid = String(message).includes('No valid token found');
+            const code = isTokenInvalid ? 'INVALID_TOKEN' : 'GARMIN_SERVICE_ERROR';
+            const status = isTokenInvalid ? 401 : upstream.status
+
+            // On failure, log the forensics that localize the source: a text/plain Cloudflare body
+            // (server=cloudflare, cf-ray set) is a Render-edge throttle that never reached Flask,
+            // whereas a JSON bodys came from Flask itself. bodySnippet captures non-JSON bodies.
             console.error(
                 `[garmin-activities][#${reqId}] upstream ${upstream.status}: ${message} ` +
                     `bodySnippet=${JSON.stringify(rawBody.slice(0, 300))}`,
             );
-            return res.status(upstream.status).json({ code, message });
+            return res.status(status).json({ code, message });
         }
 
         const count = Array.isArray(data?.data) ? data.data.length : 0;
