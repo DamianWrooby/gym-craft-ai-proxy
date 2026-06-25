@@ -1,7 +1,7 @@
 // Relays a Garmin activity-list request to the Python (curl_cffi) microservice. The browser
 // calls this directly so the slow Garmin auth + fetch never sits inside a time-limited
-// Netlify function. Pure relay: no DB, no session — the Python service still requires valid
-// Garmin credentials, which is the real gate.
+// Netlify function. Pure relay: no DB, no session — identity is the opaque Bearer session token
+// the browser forwards, which the Python service validates. No credentials pass through here.
 
 const TIMEOUT_MS = 120_000;
 
@@ -15,22 +15,26 @@ function isNonEmptyString(v) {
     return typeof v === 'string' && v.trim().length > 0;
 }
 
-// Never log raw credentials. The email is masked to local-part-initials + domain so logs stay
-// correlatable per user without storing PII in plaintext.
-function maskEmail(email) {
-    if (typeof email !== 'string' || !email.includes('@')) return '***';
-    const [local, domain] = email.split('@');
-    return `${local.slice(0, 2)}***@${domain}`;
+// Pulls the opaque session token from the incoming Authorization: Bearer header (the browser
+// forwards it). Never logged — it's a credential.
+function extractBearer(req) {
+    const auth = req.headers['authorization'] || '';
+    return auth.startsWith('Bearer ') ? auth.slice('Bearer '.length).trim() : '';
 }
 
 async function getGarminActivities(req, res) {
     const reqId = ++requestSeq;
     const start = Date.now();
-    const { username, startDate, endDate, password } = req.body || {};
+    const { startDate, endDate } = req.body || {};
+    const bearer = extractBearer(req);
 
-    if (!isNonEmptyString(username) || !isNonEmptyString(startDate)) {
-        console.warn(`[garmin-activities][#${reqId}] 400: username/startDate missing`);
-        return res.status(400).json({ error: 'username and startDate must be non-empty strings' });
+    if (!bearer) {
+        console.warn(`[garmin-activities][#${reqId}] 401: missing Bearer session token`);
+        return res.status(401).json({ code: 'INVALID_TOKEN', message: 'Missing Garmin session token' });
+    }
+    if (!isNonEmptyString(startDate)) {
+        console.warn(`[garmin-activities][#${reqId}] 400: startDate missing`);
+        return res.status(400).json({ error: 'startDate must be a non-empty string' });
     }
 
     const baseUrl = process.env.SECRET_INTERNAL_GARMIN_API_URL;
@@ -39,26 +43,27 @@ async function getGarminActivities(req, res) {
         return res.status(500).json({ error: 'Garmin service URL is not configured' });
     }
 
-    const requestBody = { username, startDate };
+    const requestBody = { startDate };
     if (isNonEmptyString(endDate)) requestBody.endDate = endDate;
-    if (isNonEmptyString(password)) requestBody.password = password;
 
     const targetUrl = `${baseUrl}/activities`;
 
     // Log BEFORE the fetch so a request that hangs or times out is still visible, and so the
-    // exact moment each proxy->Flask call leaves is timestamped. forwardingPassword=true marks
-    // the cold-login path (Flask falls back to a Garmin password login when it has no token).
+    // exact moment each proxy->Flask call leaves is timestamped.
     console.log(
         `[${new Date().toISOString()}] [garmin-activities][#${reqId}] -> POST ${targetUrl} ` +
-            `user=${maskEmail(username)} window=${startDate}..${endDate || ''} ` +
-            `forwardingPassword=${isNonEmptyString(password)}`,
+            `window=${startDate}..${endDate || ''}`,
     );
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
     try {
-        const headers = { 'Content-Type': 'application/json', 'X-Request-Id': String(reqId) };
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-Request-Id': String(reqId),
+            Authorization: `Bearer ${bearer}`,
+        };
         if (process.env.SECRET_INTERNAL_API_KEY) {
             headers['X-API-Key'] = process.env.SECRET_INTERNAL_API_KEY;
         }
@@ -83,17 +88,23 @@ async function getGarminActivities(req, res) {
 
         if (!upstream.ok) {
             const message = data?.message || 'Garmin service error';
-            const code = String(message).includes('No valid token found') ? 'INVALID_TOKEN' : 'GARMIN_SERVICE_ERROR';
+            // A 401 from Flask means the session token is missing/invalid/expired → the browser
+            // should prompt for a Garmin login and re-authenticate. Older "No valid token found"
+            // bodies are kept for backwards compatibility.
+            const isTokenInvalid = upstream.status === 401 || String(message).includes('No valid token found');
+            const code = isTokenInvalid ? 'INVALID_TOKEN' : 'GARMIN_SERVICE_ERROR';
+            const status = isTokenInvalid ? 401 : upstream.status;
+
             // On failure, log the forensics that localize the source: a text/plain Cloudflare body
             // (server=cloudflare, cf-ray set) is a Render-edge throttle that never reached Flask,
-            // whereas a JSON body came from Flask itself. bodySnippet captures non-JSON bodies.
+            // whereas a JSON bodys came from Flask itself. bodySnippet captures non-JSON bodies.
             console.error(
                 `[garmin-activities][#${reqId}] upstream ${upstream.status} in ${ms}ms: ${message} ` +
                     `server=${upstream.headers.get('server') || '-'} cfRay=${upstream.headers.get('cf-ray') || '-'} ` +
                     `ct=${upstream.headers.get('content-type') || '-'} retryAfter=${upstream.headers.get('retry-after') || '-'} ` +
                     `bodySnippet=${JSON.stringify(rawBody.slice(0, 300))}`,
             );
-            return res.status(upstream.status).json({ code, message });
+            return res.status(status).json({ code, message });
         }
 
         const count = Array.isArray(data?.data) ? data.data.length : 0;
