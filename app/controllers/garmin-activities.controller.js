@@ -79,19 +79,6 @@ async function getGarminActivities(req, res) {
         const rawBody = await upstream.text();
         const ms = Date.now() - start;
 
-        // Response line for EVERY response, not just errors. The server / cf-ray / content-type
-        // headers are what distinguish the two 429 sources: Flask's own throttle returns JSON
-        // (server=gunicorn-ish, no cf-ray), whereas a Render-edge throttle returns a text/plain
-        // Cloudflare body (server=cloudflare, cf-ray set) and never reaches Flask at all.
-        console.log(
-            `[garmin-activities][#${reqId}] <- ${upstream.status} ${ms}ms ` +
-                `server=${upstream.headers.get('server') || '-'} ` +
-                `cfRay=${upstream.headers.get('cf-ray') || '-'} ` +
-                `ct=${upstream.headers.get('content-type') || '-'} ` +
-                `retryAfter=${upstream.headers.get('retry-after') || '-'} ` +
-                `bytes=${rawBody.length}`,
-        );
-
         let data = {};
         try {
             data = rawBody ? JSON.parse(rawBody) : {};
@@ -112,14 +99,16 @@ async function getGarminActivities(req, res) {
             // (server=cloudflare, cf-ray set) is a Render-edge throttle that never reached Flask,
             // whereas a JSON bodys came from Flask itself. bodySnippet captures non-JSON bodies.
             console.error(
-                `[garmin-activities][#${reqId}] upstream ${upstream.status}: ${message} ` +
+                `[garmin-activities][#${reqId}] upstream ${upstream.status} in ${ms}ms: ${message} ` +
+                    `server=${upstream.headers.get('server') || '-'} cfRay=${upstream.headers.get('cf-ray') || '-'} ` +
+                    `ct=${upstream.headers.get('content-type') || '-'} retryAfter=${upstream.headers.get('retry-after') || '-'} ` +
                     `bodySnippet=${JSON.stringify(rawBody.slice(0, 300))}`,
             );
             return res.status(status).json({ code, message });
         }
 
         const count = Array.isArray(data?.data) ? data.data.length : 0;
-        console.log(`[garmin-activities][#${reqId}] success: ${count} activities in ${ms}ms`);
+        console.log(`[garmin-activities][#${reqId}] <- 200 ${ms}ms, ${count} activities`);
         return res.status(200).json(data);
     } catch (err) {
         const aborted = err?.name === 'AbortError';
