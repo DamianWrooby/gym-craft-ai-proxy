@@ -1,10 +1,10 @@
 const openAIconfig = require('../config/openAI.config');
 
 async function fetchAIChatCompletion(messages, options = {}) {
-    const { maxTokens, timeoutMs, seed } = options;
+    const { maxTokens, timeoutMs, seed, model } = options;
 
     const payload = {
-        model: openAIconfig.model,
+        model: model || openAIconfig.model,
         temperature: openAIconfig.completionTemperature,
         messages,
     };
