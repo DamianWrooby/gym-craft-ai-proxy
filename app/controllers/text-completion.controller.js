@@ -14,7 +14,7 @@ function resolveModel(requested, tag) {
     if (isNonEmptyString(requested) && openAIconfig.allowedModels.includes(requested.trim())) {
         return requested.trim();
     }
-    console.warn(`[${tag}] ignoring unknown model "${requested}" — using default ${openAIconfig.model}`);
+    console.warn(`[${tag}] ignoring unknown model "${requested}" — using default ${openAIconfig.defaultModel}`);
     return undefined;
 }
 
@@ -30,7 +30,7 @@ function createTextCompletionHandler({ tag, maxTokens, responseKey }) {
         const resolvedModel = resolveModel(model, tag);
         const sizeBytes = Buffer.byteLength(system, 'utf8') + Buffer.byteLength(user, 'utf8');
         console.log(
-            `[${new Date().toISOString()}] [${tag}] received (${sizeBytes} bytes, model ${resolvedModel ?? openAIconfig.model})`,
+            `[${new Date().toISOString()}] [${tag}] received (${sizeBytes} bytes, model ${resolvedModel ?? openAIconfig.defaultModel})`,
         );
 
         try {

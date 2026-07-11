@@ -4,7 +4,7 @@ async function fetchAIChatCompletion(messages, options = {}) {
     const { maxTokens, timeoutMs, seed, model } = options;
 
     const payload = {
-        model: model || openAIconfig.model,
+        model: model || openAIconfig.defaultModel,
         temperature: openAIconfig.completionTemperature,
         messages,
     };
