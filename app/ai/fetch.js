@@ -9,7 +9,8 @@ async function fetchAIChatCompletion(messages, options = {}) {
         messages,
     };
     if (seed !== undefined) payload.seed = seed;
-    if (maxTokens) payload.max_tokens = maxTokens;
+    // max_completion_tokens, not max_tokens: gpt-5.x models reject max_tokens with a 400.
+    if (maxTokens) payload.max_completion_tokens = maxTokens;
 
     const controller = new AbortController();
     const timeoutId = timeoutMs ? setTimeout(() => controller.abort(), timeoutMs) : null;
@@ -26,7 +27,9 @@ async function fetchAIChatCompletion(messages, options = {}) {
         });
 
         if (!response.ok) {
-            const err = new Error(`OpenAI API returned status ${response.status}`);
+            const body = await response.json().catch(() => null);
+            const detail = body?.error?.message ? `: ${body.error.message}` : '';
+            const err = new Error(`OpenAI API returned status ${response.status}${detail}`);
             err.status = response.status;
             throw err;
         }
