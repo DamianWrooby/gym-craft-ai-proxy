@@ -62,12 +62,12 @@ There is no test suite (`npm test` is a placeholder). Format the code with `npx 
 
 All endpoints are `POST` and speak JSON. CORS is restricted to the app origins (`http://localhost:5173`, `https://gymcraft.damianwroblewski.com`).
 
-| Endpoint                 | Body                       | Purpose                                                                                                                       |
-| ------------------------ | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Endpoint                 | Body                       | Purpose                                                                                                                        |
+| ------------------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `/api/generate-plan`     | `{ session, formData }`    | Validates the survey form, authenticates the session, generates a plan with OpenAI and converts it to Garmin Connect workouts. |
-| `/api/weekly-report`     | `{ system, user, model? }` | Text completion, returned as `{ summary }`.                                                                                   |
-| `/api/explain-run`       | `{ system, user, model? }` | Text completion, returned as `{ analysis }`.                                                                                  |
-| `/api/garmin-activities` | `{ startDate, endDate? }`  | Relays an activity list request to the Python Garmin microservice.                                                            |
+| `/api/weekly-report`     | `{ system, user, model? }` | Text completion, returned as `{ summary }`.                                                                                    |
+| `/api/explain-run`       | `{ system, user, model? }` | Text completion, returned as `{ analysis }`.                                                                                   |
+| `/api/garmin-activities` | `{ startDate, endDate? }`  | Relays an activity list request to the Python Garmin microservice.                                                             |
 
 Notes:
 
