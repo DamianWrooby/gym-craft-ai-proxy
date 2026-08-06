@@ -44,8 +44,10 @@ async function getCompletion(req, res) {
         return res.json(convertedPlan);
     } catch (error) {
         // A rejected session is the user's problem to fix, not ours: pass the 401 through so the
-        // app can prompt for a fresh login instead of showing a generic failure.
-        if (error?.status === 401) {
+        // app can prompt for a fresh login instead of showing a generic failure. Match on `code`,
+        // not `status` — ai/fetch.js also sets status 401 when OpenAI rejects our API key, and
+        // bouncing users to login over a server-side credential outage helps nobody.
+        if (error?.code === 'INVALID_SESSION') {
             console.warn('Rejected session in getCompletion:', error.message);
             return res.status(401).json({ code: error.code, message: error.message });
         }
