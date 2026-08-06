@@ -43,6 +43,12 @@ async function getCompletion(req, res) {
         console.log(`[${new Date().toISOString()}] Finished in ${Date.now() - start}ms`);
         return res.json(convertedPlan);
     } catch (error) {
+        // A rejected session is the user's problem to fix, not ours: pass the 401 through so the
+        // app can prompt for a fresh login instead of showing a generic failure.
+        if (error?.status === 401) {
+            console.warn('Rejected session in getCompletion:', error.message);
+            return res.status(401).json({ code: error.code, message: error.message });
+        }
         console.error('Error in getCompletion:', error.message);
         return res.status(500).json({ error: 'Internal server error' });
     }
