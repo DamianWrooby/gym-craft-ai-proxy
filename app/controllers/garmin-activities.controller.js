@@ -1,4 +1,4 @@
-// Relays a Garmin activity-list request to the Python (curl_cffi) microservice. The browser
+// Relays Garmin activity-list and activity-detail requests to the Python (curl_cffi) microservice. The browser
 // calls this directly so the slow Garmin auth + fetch never sits inside a time-limited
 // Netlify function. Pure relay: no DB, no session — identity is the opaque Bearer session token
 // the browser forwards, which the Python service validates. No credentials pass through here.
@@ -22,38 +22,36 @@ function extractBearer(req) {
     return auth.startsWith('Bearer ') ? auth.slice('Bearer '.length).trim() : '';
 }
 
-async function getGarminActivities(req, res) {
+/**
+ * Relays one POST to the Python service. `validate` returns `{ error }` or `{ body, describe }`;
+ * `summarize` turns a 200 payload into a log fragment. Shared by every Garmin relay endpoint.
+ */
+async function relay(req, res, { tag, path, validate, summarize }) {
     const reqId = ++requestSeq;
     const start = Date.now();
-    const { startDate, endDate } = req.body || {};
     const bearer = extractBearer(req);
 
     if (!bearer) {
-        console.warn(`[garmin-activities][#${reqId}] 401: missing Bearer session token`);
+        console.warn(`[${tag}][#${reqId}] 401: missing Bearer session token`);
         return res.status(401).json({ code: 'INVALID_TOKEN', message: 'Missing Garmin session token' });
     }
-    if (!isNonEmptyString(startDate)) {
-        console.warn(`[garmin-activities][#${reqId}] 400: startDate missing`);
-        return res.status(400).json({ error: 'startDate must be a non-empty string' });
+    const checked = validate(req.body || {});
+    if (checked.error) {
+        console.warn(`[${tag}][#${reqId}] 400: ${checked.error}`);
+        return res.status(400).json({ error: checked.error });
     }
 
     const baseUrl = process.env.SECRET_INTERNAL_GARMIN_API_URL;
     if (!baseUrl) {
-        console.error(`[garmin-activities][#${reqId}] SECRET_INTERNAL_GARMIN_API_URL is not configured`);
+        console.error(`[${tag}][#${reqId}] SECRET_INTERNAL_GARMIN_API_URL is not configured`);
         return res.status(500).json({ error: 'Garmin service URL is not configured' });
     }
 
-    const requestBody = { startDate };
-    if (isNonEmptyString(endDate)) requestBody.endDate = endDate;
-
-    const targetUrl = `${baseUrl}/activities`;
+    const targetUrl = `${baseUrl}${path}`;
 
     // Log BEFORE the fetch so a request that hangs or times out is still visible, and so the
     // exact moment each proxy->Flask call leaves is timestamped.
-    console.log(
-        `[${new Date().toISOString()}] [garmin-activities][#${reqId}] -> POST ${targetUrl} ` +
-            `window=${startDate}..${endDate || ''}`,
-    );
+    console.log(`[${new Date().toISOString()}] [${tag}][#${reqId}] -> POST ${targetUrl} ${checked.describe}`);
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -71,7 +69,7 @@ async function getGarminActivities(req, res) {
         const upstream = await fetch(targetUrl, {
             method: 'POST',
             headers,
-            body: JSON.stringify(requestBody),
+            body: JSON.stringify(checked.body),
             signal: controller.signal,
         });
 
@@ -99,7 +97,7 @@ async function getGarminActivities(req, res) {
             // (server=cloudflare, cf-ray set) is a Render-edge throttle that never reached Flask,
             // whereas a JSON bodys came from Flask itself. bodySnippet captures non-JSON bodies.
             console.error(
-                `[garmin-activities][#${reqId}] upstream ${upstream.status} in ${ms}ms: ${message} ` +
+                `[${tag}][#${reqId}] upstream ${upstream.status} in ${ms}ms: ${message} ` +
                     `server=${upstream.headers.get('server') || '-'} cfRay=${upstream.headers.get('cf-ray') || '-'} ` +
                     `ct=${upstream.headers.get('content-type') || '-'} retryAfter=${upstream.headers.get('retry-after') || '-'} ` +
                     `bodySnippet=${JSON.stringify(rawBody.slice(0, 300))}`,
@@ -107,8 +105,7 @@ async function getGarminActivities(req, res) {
             return res.status(status).json({ code, message });
         }
 
-        const count = Array.isArray(data?.data) ? data.data.length : 0;
-        console.log(`[garmin-activities][#${reqId}] <- 200 ${ms}ms, ${count} activities`);
+        console.log(`[${tag}][#${reqId}] <- 200 ${ms}ms, ${summarize(data)}`);
         return res.status(200).json(data);
     } catch (err) {
         const aborted = err?.name === 'AbortError';
@@ -117,11 +114,41 @@ async function getGarminActivities(req, res) {
             : err instanceof Error
               ? err.message
               : 'Garmin relay failed';
-        console.error(`[garmin-activities][#${reqId}] ${message} after ${Date.now() - start}ms`);
+        console.error(`[${tag}][#${reqId}] ${message} after ${Date.now() - start}ms`);
         return res.status(aborted ? 504 : 502).json({ code: 'GARMIN_SERVICE_ERROR', message });
     } finally {
         clearTimeout(timeout);
     }
 }
 
-module.exports = { getGarminActivities };
+function getGarminActivities(req, res) {
+    return relay(req, res, {
+        tag: 'garmin-activities',
+        path: '/activities',
+        validate: ({ startDate, endDate }) => {
+            if (!isNonEmptyString(startDate)) return { error: 'startDate must be a non-empty string' };
+            const body = { startDate };
+            if (isNonEmptyString(endDate)) body.endDate = endDate;
+            return { body, describe: `window=${startDate}..${endDate || ''}` };
+        },
+        summarize: (data) => `${Array.isArray(data?.data) ? data.data.length : 0} activities`,
+    });
+}
+
+// One activity's splits + downsampled samples. The browser fetches these after a sync so the app
+// can score each new run against the athlete's own HR zones without a Garmin call inside Netlify.
+function getGarminActivityDetail(req, res) {
+    return relay(req, res, {
+        tag: 'garmin-activity-detail',
+        path: '/activity/detail',
+        validate: ({ activityId }) => {
+            if (!Number.isSafeInteger(activityId) || activityId <= 0) {
+                return { error: 'activityId must be a positive integer' };
+            }
+            return { body: { activityId }, describe: `activityId=${activityId}` };
+        },
+        summarize: (data) => `${Array.isArray(data?.data?.samples) ? data.data.samples.length : 0} samples`,
+    });
+}
+
+module.exports = { getGarminActivities, getGarminActivityDetail };

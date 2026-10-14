@@ -62,18 +62,19 @@ There is no test suite (`npm test` is a placeholder). Format the code with `npx 
 
 All endpoints are `POST` and speak JSON. CORS is restricted to the app origins (`http://localhost:5173`, `https://gymcraft.damianwroblewski.com`).
 
-| Endpoint                 | Body                       | Purpose                                                                                                                        |
-| ------------------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `/api/generate-plan`     | `{ session, formData }`    | Validates the survey form, authenticates the session, generates a plan with OpenAI and converts it to Garmin Connect workouts. |
-| `/api/weekly-report`     | `{ system, user, model? }` | Text completion, returned as `{ summary }`.                                                                                    |
-| `/api/explain-run`       | `{ system, user, model? }` | Text completion, returned as `{ analysis }`.                                                                                   |
-| `/api/garmin-activities` | `{ startDate, endDate? }`  | Relays an activity list request to the Python Garmin microservice.                                                             |
+| Endpoint                      | Body                       | Purpose                                                                                                                        |
+| ----------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `/api/generate-plan`          | `{ session, formData }`    | Validates the survey form, authenticates the session, generates a plan with OpenAI and converts it to Garmin Connect workouts. |
+| `/api/weekly-report`          | `{ system, user, model? }` | Text completion, returned as `{ summary }`.                                                                                    |
+| `/api/explain-run`            | `{ system, user, model? }` | Text completion, returned as `{ analysis }`.                                                                                   |
+| `/api/garmin-activities`      | `{ startDate, endDate? }`  | Relays an activity list request to the Python Garmin microservice.                                                             |
+| `/api/garmin-activity-detail` | `{ activityId }`           | Relays one activity's splits + samples request to the Python Garmin microservice.                                              |
 
 Notes:
 
 - `/api/generate-plan` responds `401 { code: 'INVALID_SESSION', message }` when the session token is missing or no longer matches a user — the app should send the user through login again.
 - The optional `model` field is subscription tier based and is only honored for ids listed in `allowedModels` (`app/config/openAI.config.js`); anything else falls back to the default model.
-- `/api/garmin-activities` takes the user's session as an `Authorization: Bearer …` header and forwards it to the Garmin microservice, which validates it. No Garmin credentials pass through this proxy. Errors come back as `{ code, message }`, with `code: 'INVALID_TOKEN'` when the session needs re-authentication.
+- `/api/garmin-activities` and `/api/garmin-activity-detail` take the user's session as an `Authorization: Bearer …` header and forwards it to the Garmin microservice, which validates it. No Garmin credentials pass through this proxy. Errors come back as `{ code, message }`, with `code: 'INVALID_TOKEN'` when the session needs re-authentication.
 
 ## How does it work?
 
@@ -87,7 +88,7 @@ You can configure the proxy server by setting the following environment variable
 
 - `DATABASE_URL`: Your database connection URL
 - `SECRET_OPENAI_KEY`: Your OpenAI API key
-- `SECRET_INTERNAL_GARMIN_API_URL`: Base URL of the Python Garmin microservice (used by `/api/garmin-activities`)
+- `SECRET_INTERNAL_GARMIN_API_URL`: Base URL of the Python Garmin microservice (used by `/api/garmin-activities` and `/api/garmin-activity-detail`)
 - `SECRET_INTERNAL_API_KEY`: Optional `X-API-Key` sent to that microservice
 - `PORT`: Port to listen on (defaults to 3000; provided by the platform in production)
 
