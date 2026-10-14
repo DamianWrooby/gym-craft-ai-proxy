@@ -5,7 +5,7 @@ const cors = require('cors');
 const app = express();
 const { getCompletion } = require('./app/controllers/completion.controller');
 const createTextCompletionHandler = require('./app/controllers/text-completion.controller');
-const { getGarminActivities } = require('./app/controllers/garmin-activities.controller');
+const { getGarminActivities, getGarminActivityDetail } = require('./app/controllers/garmin-activities.controller');
 
 // Middlewares
 // Allowlist the app origins. The Garmin relay forwards live Garmin credentials on the
@@ -31,6 +31,7 @@ app.post(
     createTextCompletionHandler({ tag: 'explain-run', maxTokens: 700, responseKey: 'analysis' }),
 );
 app.post('/api/garmin-activities', getGarminActivities);
+app.post('/api/garmin-activity-detail', getGarminActivityDetail);
 
 // Start the server
 const port = 3000;
