@@ -5,6 +5,7 @@ const cors = require('cors');
 const app = express();
 const { getCompletion } = require('./app/controllers/completion.controller');
 const createTextCompletionHandler = require('./app/controllers/text-completion.controller');
+const runAiRequest = require('./app/controllers/ai-request.controller');
 const { getGarminActivities, getGarminActivityDetail } = require('./app/controllers/garmin-activities.controller');
 
 // Middlewares
@@ -30,6 +31,7 @@ app.post(
     '/api/explain-run',
     createTextCompletionHandler({ tag: 'explain-run', maxTokens: 700, responseKey: 'analysis' }),
 );
+app.post('/api/ai-request', runAiRequest);
 app.post('/api/garmin-activities', getGarminActivities);
 app.post('/api/garmin-activity-detail', getGarminActivityDetail);
 
