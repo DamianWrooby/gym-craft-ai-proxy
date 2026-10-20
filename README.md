@@ -67,6 +67,7 @@ All endpoints are `POST` and speak JSON. CORS is restricted to the app origins (
 | `/api/generate-plan`          | `{ session, formData }`    | Validates the survey form, authenticates the session, generates a plan with OpenAI and converts it to Garmin Connect workouts. |
 | `/api/weekly-report`          | `{ system, user, model? }` | Text completion, returned as `{ summary }`.                                                                                    |
 | `/api/explain-run`            | `{ system, user, model? }` | Text completion, returned as `{ analysis }`.                                                                                   |
+| `/api/ai-request`             | `{ session, aiRequestId }` | Runs one app-written `AiRequest` row and writes the output and status back to it. Returns `{ status }`.                       |
 | `/api/garmin-activities`      | `{ startDate, endDate? }`  | Relays an activity list request to the Python Garmin microservice.                                                             |
 | `/api/garmin-activity-detail` | `{ activityId }`           | Relays one activity's splits + samples request to the Python Garmin microservice.                                              |
 

@@ -1,7 +1,7 @@
 const openAIconfig = require('../config/openAI.config');
 
 async function fetchAIChatCompletion(messages, options = {}) {
-    const { maxTokens, timeoutMs, seed, model } = options;
+    const { maxTokens, timeoutMs, seed, model, json } = options;
 
     const payload = {
         model: model || openAIconfig.defaultModel,
@@ -11,6 +11,7 @@ async function fetchAIChatCompletion(messages, options = {}) {
     if (seed !== undefined) payload.seed = seed;
     // max_completion_tokens, not max_tokens: gpt-5.x models reject max_tokens with a 400.
     if (maxTokens) payload.max_completion_tokens = maxTokens;
+    if (json) payload.response_format = { type: 'json_object' };
 
     const controller = new AbortController();
     const timeoutId = timeoutMs ? setTimeout(() => controller.abort(), timeoutMs) : null;
